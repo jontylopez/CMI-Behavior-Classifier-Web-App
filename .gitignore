@@ -154,11 +154,11 @@ Thumbs.db
 *.tmp
 *.temp
 
-# Data files
-*.csv
-*.xlsx
-*.xls
-*.json
+# Data files (excluding essential config files)
+# *.csv  # Commented out to allow sample data files
+# *.xlsx  # Commented out to allow sample data files
+# *.xls  # Commented out to allow sample data files
+# *.json  # Commented out to allow config files
 *.parquet
 *.feather
 *.h5
@@ -297,8 +297,8 @@ Temporary Items
 *.rar
 *.7z
 
-# Large files
-*.pkl
+# Large files (excluding essential model files)
+# *.pkl  # Commented out to allow model.pkl and encoders.pkl
 *.pickle
 *.joblib
 *.h5

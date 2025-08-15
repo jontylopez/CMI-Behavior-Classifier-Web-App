@@ -46,6 +46,8 @@ cd CMI-Behavior-Classifier
 python setup.py
 ```
 
+📖 **For detailed setup instructions after cloning, see [SETUP_AFTER_CLONE.md](SETUP_AFTER_CLONE.md)**
+
 ### Manual Step-by-Step Setup
 
 1. **Clone the repository**
