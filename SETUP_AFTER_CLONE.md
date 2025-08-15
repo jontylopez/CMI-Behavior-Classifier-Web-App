@@ -31,7 +31,10 @@ The following files are **automatically included** when you clone the repository
 # Option 1: Use the automated setup script (Recommended)
 python setup.py
 
-# Option 2: Manual installation
+# Option 2: Windows-specific setup (if you encounter compilation errors)
+python setup_windows.py
+
+# Option 3: Manual installation
 pip install -r requirements.txt
 ```
 
@@ -191,12 +194,78 @@ python setup.py
 ```
 
 **Alternative approach:**
+
 ```bash
 # Install all dependencies first
 pip install -r requirements.txt
 
 # Then run setup
 python setup.py
+```
+
+### **Windows Compilation Errors (Missing C++ Compilers)**
+
+If you get errors like "Unknown compiler(s)" or "metadata-generation-failed" on Windows:
+
+**Error symptoms:**
+- `ERROR: Unknown compiler(s): [['icl'], ['cl'], ['cc'], ['gcc'], ['clang']]`
+- `metadata-generation-failed`
+- `The system cannot find the file specified`
+
+**Solutions (try in order):**
+
+#### **1. Install Microsoft Visual C++ Build Tools (Recommended)**
+```bash
+# Download and install from:
+# https://visualstudio.microsoft.com/visual-cpp-build-tools/
+# 
+# 1. Download the installer
+# 2. Run as administrator
+# 3. Select "C++ build tools" workload
+# 4. Install and restart computer
+# 5. Try setup again
+```
+
+#### **2. Use Pre-compiled Wheels**
+```bash
+# Upgrade pip first
+pip install --upgrade pip
+
+# Install with pre-compiled wheels only
+pip install --only-binary=all -r requirements.txt
+```
+
+#### **3. Manual Package Installation**
+```bash
+# Install packages one by one
+pip install --upgrade pip
+pip install numpy
+pip install scikit-learn
+pip install pandas
+pip install streamlit
+pip install joblib
+pip install requests
+```
+
+#### **4. Use Anaconda/Miniconda (Best for Windows)**
+```bash
+# 1. Install Anaconda from: https://www.anaconda.com/download
+# 2. Create new environment
+conda create -n cmi-app python=3.9
+conda activate cmi-app
+
+# 3. Install packages with conda
+conda install numpy scikit-learn pandas
+pip install streamlit joblib requests
+
+# 4. Run setup
+python setup.py
+```
+
+#### **5. Alternative: Use Windows Subsystem for Linux (WSL)**
+```bash
+# Install WSL and Ubuntu
+# Then follow Linux installation instructions
 ```
 
 ### **Permission Issues**

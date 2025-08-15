@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Setup script for CMI Behavior Classifier
-This script automates the installation and setup process.
+Windows-specific setup script for CMI Behavior Classifier
+This script handles Windows compilation issues and provides alternative installation methods.
 """
 
 import os
@@ -11,9 +11,6 @@ import platform
 import zipfile
 from pathlib import Path
 
-# Import requests after dependencies are installed
-requests = None
-
 def check_python_version():
     """Check if Python version is compatible"""
     if sys.version_info < (3, 8):
@@ -22,16 +19,6 @@ def check_python_version():
         return False
     print(f"✅ Python version: {sys.version.split()[0]}")
     return True
-
-def check_git():
-    """Check if git is installed"""
-    try:
-        subprocess.run(["git", "--version"], capture_output=True, check=True)
-        print("✅ Git is installed")
-        return True
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        print("❌ Git is not installed. Please install Git first.")
-        return False
 
 def create_virtual_environment():
     """Create virtual environment"""
@@ -48,62 +35,58 @@ def create_virtual_environment():
         print(f"❌ Error creating virtual environment: {e}")
         return False
 
-def install_dependencies():
-    """Install required dependencies"""
-    print("📦 Installing dependencies...")
+def install_dependencies_windows():
+    """Install dependencies with Windows-specific handling"""
+    print("📦 Installing dependencies for Windows...")
     
-    # Determine the correct pip command
-    if platform.system() == "Windows":
-        pip_cmd = "venv\\Scripts\\pip"
-    else:
-        pip_cmd = "venv/bin/pip"
+    pip_cmd = "venv\\Scripts\\pip"
     
+    # Strategy 1: Try upgrading pip first
     try:
-        # First, upgrade pip to latest version
         print("   Upgrading pip...")
         subprocess.run([pip_cmd, "install", "--upgrade", "pip"], check=True)
-        
-        # Try installing with pre-compiled wheels first
-        print("   Installing dependencies (attempting pre-compiled wheels)...")
-        subprocess.run([pip_cmd, "install", "-r", "requirements.txt"], check=True)
-        print("✅ Dependencies installed successfully")
+    except subprocess.CalledProcessError:
+        print("   ⚠️  Could not upgrade pip, continuing...")
+    
+    # Strategy 2: Try installing with pre-compiled wheels
+    try:
+        print("   Attempting installation with pre-compiled wheels...")
+        subprocess.run([pip_cmd, "install", "--only-binary=all", "-r", "requirements.txt"], check=True)
+        print("✅ Dependencies installed successfully using pre-compiled wheels")
         return True
-        
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Error installing dependencies: {e}")
-        
-        # If it's a Windows compilation error, provide alternative solutions
-        if platform.system() == "Windows":
-            print("\n🔧 Windows compilation error detected!")
-            print("   This usually happens when C++ compilers are missing.")
-            print("\n💡 Try these solutions:")
-            print("\n   1. Install Microsoft Visual C++ Build Tools:")
-            print("      - Download from: https://visualstudio.microsoft.com/visual-cpp-build-tools/")
-            print("      - Install the 'C++ build tools' workload")
-            print("      - Restart your computer and try again")
-            
-            print("\n   2. Use pre-compiled wheels (alternative approach):")
-            try:
-                print("   Attempting to install with --only-binary=all...")
-                subprocess.run([pip_cmd, "install", "--only-binary=all", "-r", "requirements.txt"], check=True)
-                print("✅ Dependencies installed successfully using pre-compiled wheels")
-                return True
-            except subprocess.CalledProcessError:
-                print("   ❌ Pre-compiled wheel installation also failed")
-            
-            print("\n   3. Manual installation:")
-            print("      pip install --upgrade pip")
-            print("      pip install numpy scikit-learn pandas streamlit joblib requests")
-            
-            print("\n   4. Use Anaconda/Miniconda (recommended for Windows):")
-            print("      - Install Anaconda from: https://www.anaconda.com/download")
-            print("      - Use conda instead of pip for scientific packages")
-        
+    except subprocess.CalledProcessError:
+        print("   ❌ Pre-compiled wheel installation failed")
+    
+    # Strategy 3: Try installing packages one by one
+    print("   Attempting individual package installation...")
+    packages = ["numpy", "scikit-learn", "pandas", "streamlit", "joblib", "requests"]
+    
+    for package in packages:
+        try:
+            print(f"   Installing {package}...")
+            subprocess.run([pip_cmd, "install", package], check=True)
+        except subprocess.CalledProcessError as e:
+            print(f"   ❌ Failed to install {package}: {e}")
+            if package in ["numpy", "scikit-learn"]:
+                print(f"   💡 Try: pip install {package} --only-binary=all")
+    
+    # Strategy 4: Check if critical packages are installed
+    try:
+        import numpy
+        import sklearn
+        import pandas
+        import streamlit
+        import joblib
+        import requests
+        print("✅ All critical dependencies are available")
+        return True
+    except ImportError as e:
+        print(f"❌ Missing critical dependency: {e}")
         return False
 
 def download_models():
     """Download model files from Google Drive"""
-    global requests
+    print("📥 Downloading model files from Google Drive...")
     
     # Import requests here after dependencies are installed
     try:
@@ -111,8 +94,6 @@ def download_models():
     except ImportError:
         print("❌ requests module not found. Please install dependencies first.")
         return False
-    
-    print("📥 Downloading model files from Google Drive...")
     
     # Create models directory if it doesn't exist
     models_dir = Path("models")
@@ -176,47 +157,45 @@ def check_model_files():
     print("✅ Model files found")
     return True
 
-def run_tests():
-    """Run basic tests"""
-    print("🧪 Running basic tests...")
-    
-    # Determine the correct python command
-    if platform.system() == "Windows":
-        python_cmd = "venv\\Scripts\\python"
-    else:
-        python_cmd = "venv/bin/python"
-    
-    try:
-        # Test model loading by importing the app
-        result = subprocess.run([python_cmd, "-c", "import app; print('✅ Model loading test passed')"], 
-                              capture_output=True, text=True, check=True)
-        print("✅ Basic tests passed")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"❌ Tests failed: {e}")
-        print(f"Output: {e.stdout}")
-        print(f"Error: {e.stderr}")
-        return False
-
 def main():
-    """Main setup function"""
-    print("🧠 CMI Behavior Classifier - Setup")
+    """Main setup function for Windows"""
+    print("🧠 CMI Behavior Classifier - Windows Setup")
     print("=" * 50)
+    
+    # Check if we're on Windows
+    if platform.system() != "Windows":
+        print("❌ This script is designed for Windows only")
+        print("   Use setup.py for other operating systems")
+        sys.exit(1)
     
     # Check Python version
     if not check_python_version():
         sys.exit(1)
     
-    # Check Git
-    if not check_git():
-        print("💡 Git is optional but recommended for version control")
-    
     # Create virtual environment
     if not create_virtual_environment():
         sys.exit(1)
     
-    # Install dependencies
-    if not install_dependencies():
+    # Install dependencies with Windows-specific handling
+    if not install_dependencies_windows():
+        print("\n🔧 Installation failed. Try these solutions:")
+        print("\n1. Install Microsoft Visual C++ Build Tools:")
+        print("   https://visualstudio.microsoft.com/visual-cpp-build-tools/")
+        print("   - Download and run as administrator")
+        print("   - Select 'C++ build tools' workload")
+        print("   - Restart computer and try again")
+        
+        print("\n2. Use Anaconda/Miniconda (recommended):")
+        print("   - Install from: https://www.anaconda.com/download")
+        print("   - Create environment: conda create -n cmi-app python=3.9")
+        print("   - Install packages: conda install numpy scikit-learn pandas")
+        print("   - Install others: pip install streamlit joblib requests")
+        
+        print("\n3. Manual installation:")
+        print("   venv\\Scripts\\activate")
+        print("   pip install --upgrade pip")
+        print("   pip install --only-binary=all numpy scikit-learn pandas streamlit joblib requests")
+        
         sys.exit(1)
     
     # Check model files (will download if missing)
@@ -225,20 +204,12 @@ def main():
         print("   Please download the models manually from:")
         print("   https://drive.google.com/file/d/16ldFJFaC9gUyY7Ezmh-jUrNA8j_xvcOQ/view?usp=sharing")
         print("   Extract the files to the models/ directory")
-    else:
-        # Run tests
-        if not run_tests():
-            print("\n⚠️  Setup completed but tests failed.")
-            print("   You can still try running the app.")
     
     print("\n" + "=" * 50)
-    print("🎉 Setup completed!")
+    print("🎉 Windows setup completed!")
     print("\n📋 Next steps:")
     print("1. Activate the virtual environment:")
-    if platform.system() == "Windows":
-        print("   venv\\Scripts\\activate")
-    else:
-        print("   source venv/bin/activate")
+    print("   venv\\Scripts\\activate")
     
     print("2. Run the application:")
     print("   python run_app.py")
