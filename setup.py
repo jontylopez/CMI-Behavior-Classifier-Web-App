@@ -8,9 +8,11 @@ import os
 import sys
 import subprocess
 import platform
-import requests
 import zipfile
 from pathlib import Path
+
+# Import requests after dependencies are installed
+requests = None
 
 def check_python_version():
     """Check if Python version is compatible"""
@@ -66,6 +68,15 @@ def install_dependencies():
 
 def download_models():
     """Download model files from Google Drive"""
+    global requests
+    
+    # Import requests here after dependencies are installed
+    try:
+        import requests
+    except ImportError:
+        print("❌ requests module not found. Please install dependencies first.")
+        return False
+    
     print("📥 Downloading model files from Google Drive...")
     
     # Create models directory if it doesn't exist

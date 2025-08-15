@@ -178,6 +178,27 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+### **ModuleNotFoundError: No module named 'requests'**
+
+If you get this error when running `python setup.py`:
+
+```bash
+# First, install requests manually
+pip install requests
+
+# Then run the setup script
+python setup.py
+```
+
+**Alternative approach:**
+```bash
+# Install all dependencies first
+pip install -r requirements.txt
+
+# Then run setup
+python setup.py
+```
+
 ### **Permission Issues**
 
 If you get permission errors:
