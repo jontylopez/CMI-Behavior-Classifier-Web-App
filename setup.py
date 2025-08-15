@@ -8,6 +8,9 @@ import os
 import sys
 import subprocess
 import platform
+import requests
+import zipfile
+from pathlib import Path
 
 def check_python_version():
     """Check if Python version is compatible"""
@@ -61,6 +64,48 @@ def install_dependencies():
         print(f"❌ Error installing dependencies: {e}")
         return False
 
+def download_models():
+    """Download model files from Google Drive"""
+    print("📥 Downloading model files from Google Drive...")
+    
+    # Create models directory if it doesn't exist
+    models_dir = Path("models")
+    models_dir.mkdir(exist_ok=True)
+    
+    # Google Drive file ID from the URL
+    file_id = "16ldFJFaC9gUyY7Ezmh-jUrNA8j_xvcOQ"
+    
+    # Google Drive direct download URL
+    download_url = f"https://drive.google.com/uc?export=download&id={file_id}"
+    
+    try:
+        print("   Downloading models.zip...")
+        response = requests.get(download_url, stream=True)
+        response.raise_for_status()
+        
+        # Save the zip file
+        zip_path = "models.zip"
+        with open(zip_path, 'wb') as f:
+            for chunk in response.iter_content(chunk_size=8192):
+                f.write(chunk)
+        
+        print("   Extracting model files...")
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall("models/")
+        
+        # Clean up the zip file
+        os.remove(zip_path)
+        
+        print("✅ Model files downloaded and extracted successfully")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error downloading model files: {e}")
+        print("   Please download the models manually from:")
+        print("   https://drive.google.com/file/d/16ldFJFaC9gUyY7Ezmh-jUrNA8j_xvcOQ/view?usp=sharing")
+        print("   Extract the files to the models/ directory")
+        return False
+
 def check_model_files():
     """Check if model files exist"""
     model_path = "models/model.pkl"
@@ -68,13 +113,19 @@ def check_model_files():
     
     if not os.path.exists(model_path):
         print("❌ models/model.pkl not found")
-        print("   Please ensure you have the model files in the models/ directory")
-        return False
+        print("   Attempting to download from Google Drive...")
+        if download_models():
+            return check_model_files()  # Check again after download
+        else:
+            return False
     
     if not os.path.exists(encoders_path):
         print("❌ models/encoders.pkl not found")
-        print("   Please ensure you have the encoder files in the models/ directory")
-        return False
+        print("   Attempting to download from Google Drive...")
+        if download_models():
+            return check_model_files()  # Check again after download
+        else:
+            return False
     
     print("✅ Model files found")
     return True
@@ -122,10 +173,12 @@ def main():
     if not install_dependencies():
         sys.exit(1)
     
-    # Check model files
+    # Check model files (will download if missing)
     if not check_model_files():
         print("\n⚠️  Setup completed but model files are missing.")
-        print("   You can still run the app, but predictions may not work correctly.")
+        print("   Please download the models manually from:")
+        print("   https://drive.google.com/file/d/16ldFJFaC9gUyY7Ezmh-jUrNA8j_xvcOQ/view?usp=sharing")
+        print("   Extract the files to the models/ directory")
     else:
         # Run tests
         if not run_tests():

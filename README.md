@@ -91,12 +91,13 @@ python setup.py
    pip install -r requirements.txt
    ```
 
-5. **Verify model files exist**
+5. **Model files are downloaded automatically**
 
    ```bash
-   # Check if model files are present
-   ls models/
-   # Should show: model.pkl, encoders.pkl
+   # The setup.py script will automatically download model files from Google Drive
+   # If manual download is needed:
+   # Visit: https://drive.google.com/file/d/16ldFJFaC9gUyY7Ezmh-jUrNA8j_xvcOQ/view?usp=sharing
+   # Extract to models/ directory
    ```
 
 6. **Test the installation**
